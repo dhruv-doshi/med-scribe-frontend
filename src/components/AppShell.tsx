@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
-import { Activity, LayoutDashboard, FilePen, LogOut } from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
+import { Activity, LayoutDashboard, FilePen, LogOut, User } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   return (
     <div className="flex min-h-screen">
@@ -48,14 +49,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Bottom: theme + sign out */}
+        {/* Bottom: user info + theme + sign out */}
         <div className="border-t border-[var(--border)] px-3 py-4 space-y-1">
+          {session?.user && (
+            <div className="flex items-center gap-2 px-2 py-2">
+              <User className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{session.user.name ?? session.user.email}</p>
+                {session.user.name && (
+                  <p className="truncate text-xs text-[var(--muted-foreground)]">{session.user.email}</p>
+                )}
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between px-2">
             <span className="text-xs text-[var(--muted-foreground)]">Theme</span>
             <ThemeToggle />
           </div>
           <button
-            onClick={() => signOut({ callbackUrl: ROUTES.LOGIN })}
+            onClick={() => signOut({ callbackUrl: window.location.origin + ROUTES.LOGIN })}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
           >
             <LogOut className="h-4 w-4 shrink-0" />
@@ -96,7 +108,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           )
         })}
         <button
-          onClick={() => signOut({ callbackUrl: ROUTES.LOGIN })}
+          onClick={() => signOut({ callbackUrl: window.location.origin + ROUTES.LOGIN })}
           className="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium text-[var(--muted-foreground)]"
         >
           <LogOut className="h-5 w-5" />
