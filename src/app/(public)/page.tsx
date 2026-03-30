@@ -26,12 +26,6 @@ const FEATURES = [
   },
 ]
 
-const STATS = [
-  { value: '10K+', label: 'Notes Generated' },
-  { value: '500+', label: 'Physicians' },
-  { value: '99.9%', label: 'Uptime' },
-]
-
 export default function HomePage() {
   return (
     <>
@@ -67,16 +61,6 @@ export default function HomePage() {
             >
               Sign In
             </Link>
-          </div>
-
-          {/* Stats row */}
-          <div className="mt-14 flex flex-wrap items-center justify-center gap-8">
-            {STATS.map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <p className="font-serif text-2xl font-bold text-[var(--accent-cyan)]">{value}</p>
-                <p className="text-xs text-[var(--muted-foreground)]">{label}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>

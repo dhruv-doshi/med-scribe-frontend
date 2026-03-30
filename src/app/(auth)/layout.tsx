@@ -24,26 +24,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <p className="mt-4 text-sm text-[#6B9AB5]">
             Generate structured clinical notes from raw dictation in seconds.
           </p>
-
-          {/* Stats */}
-          <div className="mt-8 grid grid-cols-3 gap-4">
-            {[
-              { value: '10K+', label: 'Notes' },
-              { value: '500+', label: 'Physicians' },
-              { value: '99.9%', label: 'Uptime' },
-            ].map(({ value, label }) => (
-              <div key={label} className="rounded-lg border border-[#1A3050] bg-[#0A1628] p-3 text-center">
-                <p className="font-serif text-lg font-bold text-[#00D4FF]">{value}</p>
-                <p className="text-xs text-[#6B9AB5]">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Trusted line */}
-        <div className="flex items-center gap-2 text-sm text-[#6B9AB5]">
-          <span className="pulse-dot" />
-          Trusted by physicians worldwide
         </div>
       </div>
 

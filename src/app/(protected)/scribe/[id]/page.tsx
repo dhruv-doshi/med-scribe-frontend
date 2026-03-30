@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useScribeSession } from '@/hooks/useScribe'
 import SummarizationResultView from '@/components/SummarizationResult'
@@ -8,11 +9,39 @@ import { ROUTES } from '@/constants/routes'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { sanitize } from '@/lib/log-sanitizer'
 import type { SummarizationResult, NoteGenerationResult } from '@/types/scribe'
 
 export default function ScribeResultPage() {
   const { id } = useParams<{ id: string }>()
   const { data: session, isLoading, isError } = useScribeSession(id)
+  const [savedTitle, setSavedTitle] = useState<string | null>(null)
+
+  useEffect(() => {
+    console.log('[ResultPage] Page loaded', { sessionId: id })
+  }, [id])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSavedTitle(localStorage.getItem(`medscribe_title_${id}`) ?? null)
+    }
+  }, [id])
+
+  useEffect(() => {
+    if (isLoading) {
+      console.log('[ResultPage] Fetching session...', { sessionId: id })
+    } else if (isError) {
+      console.error('[ResultPage] ✗ Error loading session', { sessionId: id })
+    } else if (session) {
+      console.log('[ResultPage] ✓ Session fetched', sanitize({
+        sessionId: session.id,
+        type: session.type,
+        status: session.status,
+        hasResult: !!session.result,
+        resultFields: session.result ? Object.keys(session.result).slice(0, 3) : null,
+      }))
+    }
+  }, [session, isLoading, isError, id])
 
   if (isLoading) {
     return (
@@ -35,12 +64,14 @@ export default function ScribeResultPage() {
     )
   }
 
+  const displayTitle = savedTitle || (session.type === 'summarize' ? 'Summarization' : 'Generated Notes')
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-6 py-12">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-3xl capitalize">
-            {session.type === 'summarize' ? 'Summarization' : 'Generated Notes'}
+            {displayTitle}
           </h1>
           <p className="text-sm text-[var(--muted-foreground)]">
             {new Date(session.created_at).toLocaleString()}
