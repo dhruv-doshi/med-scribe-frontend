@@ -23,6 +23,13 @@ export default function NoteCard({
 }: NoteCardProps) {
   const displayResult = isEditing && editValue ? editValue : result
 
+  // True if this is a clinical SOAP note (vs general/meeting). Used to decide
+  // whether to show empty SOAP cards in edit mode.
+  const isClinical = !!(
+    result.subjective || result.objective || result.assessment || result.plan ||
+    result.medications || result.follow_up
+  )
+
   const handleFieldChange = (field: keyof NoteGenerationResult, value: any) => {
     if (!onEditChange || !editValue) return
     onEditChange({
@@ -74,38 +81,41 @@ export default function NoteCard({
       )}
 
       {/* SOAP notes */}
-      {displayResult.subjective && (
+      {(isEditing ? isClinical : !!displayResult.subjective) && (
         <div className="grid gap-3 sm:grid-cols-2">
-          {(['subjective', 'objective', 'assessment', 'plan'] as const).map((key, idx) => displayResult[key] && (
-            <Card
-              key={key}
-              className="scan-card card-glow animate-fade-up"
-              style={{ animationDelay: `${idx * 80}ms` }}
-            >
-              <CardHeader>
-                <CardTitle className={`text-sm uppercase tracking-wide ${SOAP_COLORS[key]}`}>
-                  {key}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditing ? (
-                  <textarea
-                    value={displayResult[key] || ''}
-                    onChange={e => handleFieldChange(key, e.target.value)}
-                    className="w-full text-sm border border-[var(--input)] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--accent-cyan)] resize-none"
-                    rows={4}
-                  />
-                ) : (
-                  <p className="text-sm">{displayResult[key]}</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+          {(['subjective', 'objective', 'assessment', 'plan'] as const).map((key, idx) => {
+            if (!isEditing && !displayResult[key]) return null
+            return (
+              <Card
+                key={key}
+                className="scan-card card-glow animate-fade-up"
+                style={{ animationDelay: `${idx * 80}ms` }}
+              >
+                <CardHeader>
+                  <CardTitle className={`text-sm uppercase tracking-wide ${SOAP_COLORS[key]}`}>
+                    {key}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isEditing ? (
+                    <textarea
+                      value={displayResult[key] || ''}
+                      onChange={e => handleFieldChange(key, e.target.value)}
+                      className="w-full text-sm border border-[var(--input)] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--accent-cyan)] resize-none"
+                      rows={4}
+                    />
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{displayResult[key]}</p>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
 
       {/* Medications */}
-      {displayResult.medications && displayResult.medications.length > 0 && (
+      {(isEditing ? isClinical : (displayResult.medications && displayResult.medications.length > 0)) && (
         <Card className="scan-card card-glow">
           <CardHeader><CardTitle>Medications</CardTitle></CardHeader>
           <CardContent>
@@ -121,7 +131,7 @@ export default function NoteCard({
               />
             ) : (
               <ul className="space-y-1">
-                {displayResult.medications.map((med, i) => {
+                {(displayResult.medications ?? []).map((med, i) => {
                   const medText = typeof med === 'string'
                     ? med
                     : `${med.name} - ${med.dosage} ${med.route}`
@@ -136,13 +146,13 @@ export default function NoteCard({
       )}
 
       {/* Follow-up */}
-      {displayResult.follow_up && (
+      {(isEditing ? isClinical : !!displayResult.follow_up) && (
         <Card className="scan-card card-glow">
           <CardHeader><CardTitle>Follow-up</CardTitle></CardHeader>
           <CardContent>
             {isEditing ? (
               <textarea
-                value={displayResult.follow_up}
+                value={displayResult.follow_up || ''}
                 onChange={e => handleFieldChange('follow_up', e.target.value)}
                 className="w-full text-sm border border-[var(--input)] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--accent-cyan)] resize-none"
                 rows={3}

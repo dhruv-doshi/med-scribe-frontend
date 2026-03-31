@@ -5,6 +5,7 @@ import type {
   SummarizeRequest,
   GenerateNotesRequest,
   TranscribeResult,
+  ChunkTranscribeResult,
   DoctorSuggestionAnswer,
   UpdateSessionRequest,
 } from '@/types/scribe'
@@ -113,6 +114,20 @@ export function useDeleteSession() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['scribe-history'] })
+    },
+  })
+}
+
+export function useTranscribeChunk() {
+  return useMutation({
+    mutationFn: async (audioBlob: Blob): Promise<ChunkTranscribeResult> => {
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'chunk.webm')
+      const res = await apiClient.post('/scribe/transcribe/chunk', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60_000,
+      })
+      return res.data.data
     },
   })
 }

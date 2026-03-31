@@ -12,6 +12,10 @@ export interface TranscribeResult {
   full_text: string
 }
 
+export interface ChunkTranscribeResult {
+  text: string
+}
+
 export interface DoctorSuggestion {
   id: string
   question: string
@@ -21,7 +25,7 @@ export interface DoctorSuggestion {
 
 export interface DoctorSuggestionAnswer {
   suggestion_id: string
-  selected_option: string | null
+  selected_options: string[]
   custom_answer: string
 }
 

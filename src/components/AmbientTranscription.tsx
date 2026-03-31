@@ -5,6 +5,7 @@ import { Mic, MicOff, Loader2, Trash2, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
 import { useTranscribeAudio } from '@/hooks/useScribe'
+import { useLiveTranscription } from '@/hooks/useLiveTranscription'
 import type { SpeakerSegment, TranscribeResult } from '@/types/scribe'
 
 interface AmbientTranscriptionProps {
@@ -35,9 +36,17 @@ export default function AmbientTranscription({
     isRecording,
     elapsedSeconds,
     isSupported,
+    getChunks,
+    mimeType,
   } = useAudioRecorder()
 
   const { mutateAsync: transcribeAudio, isPending: isTranscribing } = useTranscribeAudio()
+
+  const { liveTranscript, isChunkTranscribing, resetLiveTranscript } = useLiveTranscription({
+    isRecording,
+    getChunks,
+    mimeType,
+  })
 
   console.log('[AmbientTranscription] State:', { state, isRecording, isTranscribing })
 
@@ -134,6 +143,24 @@ export default function AmbientTranscription({
           {/* Timer */}
           <p className="font-mono text-xl text-[var(--accent-cyan)]">{formatTime(elapsedSeconds)}</p>
 
+          {/* Live transcript panel */}
+          {liveTranscript ? (
+            <div className="w-full max-w-lg rounded-md border border-[var(--input)] bg-[var(--card)] px-3 py-2 text-sm text-left overflow-y-auto max-h-48 font-mono">
+              <p className="text-[var(--muted-foreground)] text-xs mb-1">
+                Live transcript{isChunkTranscribing ? ' (updating…)' : ''}
+              </p>
+              <p className="text-[var(--foreground)] whitespace-pre-wrap">{liveTranscript}</p>
+            </div>
+          ) : elapsedSeconds < 20 ? (
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Live transcript will appear after ~20 seconds…
+            </p>
+          ) : (
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Processing first chunk…
+            </p>
+          )}
+
           {/* Stop button */}
           <button
             onClick={stopRecording}
@@ -192,6 +219,7 @@ export default function AmbientTranscription({
                 setState('idle')
                 setSegments([])
                 setTitle('')
+                resetLiveTranscript()
               }}
               disabled={isPending}
               className="flex items-center gap-1 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors disabled:pointer-events-none disabled:opacity-50"

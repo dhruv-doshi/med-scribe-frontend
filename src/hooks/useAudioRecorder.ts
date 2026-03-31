@@ -9,6 +9,8 @@ interface UseAudioRecorderReturn {
   isRecording: boolean
   elapsedSeconds: number
   isSupported: boolean
+  getChunks: () => Blob[]
+  mimeType: string
 }
 
 export function useAudioRecorder(): UseAudioRecorderReturn {
@@ -19,6 +21,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const mimeTypeRef = useRef<string>('audio/webm')
 
   const isSupported =
     typeof window !== 'undefined' &&
@@ -47,6 +50,8 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
       } else {
         mediaRecorderRef.current = mediaRecorder
       }
+
+      mimeTypeRef.current = mediaRecorderRef.current.mimeType
 
       chunksRef.current = []
 
@@ -86,7 +91,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         }
       }
 
-      mediaRecorderRef.current.start()
+      mediaRecorderRef.current.start(1000)
     } catch (error) {
       console.error('[AudioRecorder] Failed to start recording', error)
       setIsRecording(false)
@@ -122,6 +127,8 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     mediaRecorderRef.current.stop()
   }, [isRecording])
 
+  const getChunks = useCallback(() => chunksRef.current, [])
+
   return {
     startRecording,
     stopRecording,
@@ -129,5 +136,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     isRecording,
     elapsedSeconds,
     isSupported,
+    getChunks,
+    mimeType: mimeTypeRef.current,
   }
 }
