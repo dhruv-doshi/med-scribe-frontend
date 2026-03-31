@@ -58,7 +58,8 @@ export default function ScribeEditor() {
         ? `Summarization — ${dateSuffix()}`
         : `${NOTE_TYPE_LABELS[noteType]} — ${dateSuffix()}`
       localStorage.setItem(`medscribe_title_${session.id}`, buildTitle(title, fallback))
-      router.push(ROUTES.SCRIBE_RESULT(session.id))
+      const editParam = mode === 'generate' ? '?edit=true' : ''
+      router.push(ROUTES.SCRIBE_RESULT(session.id) + editParam)
     } catch {
       setError('Processing failed. Please try again.')
     }
@@ -89,7 +90,7 @@ export default function ScribeEditor() {
         status: session.status,
       }))
       console.log('[ScribeEditor] Redirecting to result page:', ROUTES.SCRIBE_RESULT(session.id))
-      router.push(ROUTES.SCRIBE_RESULT(session.id))
+      router.push(ROUTES.SCRIBE_RESULT(session.id) + '?edit=true')
     } catch (err) {
       console.error('[ScribeEditor] ✗ Generation failed', sanitize({
         error: err instanceof Error ? err.message : String(err),

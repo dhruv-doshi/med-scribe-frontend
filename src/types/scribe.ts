@@ -2,11 +2,40 @@ export type ScribeType = 'summarize' | 'generate'
 export type NoteType = 'general' | 'meeting' | 'research' | 'clinical'
 export type ScribeStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
+export interface SpeakerSegment {
+  speaker: string
+  text: string
+}
+
+export interface TranscribeResult {
+  segments: SpeakerSegment[]
+  full_text: string
+}
+
+export interface ChunkTranscribeResult {
+  text: string
+}
+
+export interface DoctorSuggestion {
+  id: string
+  question: string
+  options: string[]
+  category: 'observation' | 'plan'
+}
+
+export interface DoctorSuggestionAnswer {
+  suggestion_id: string
+  selected_options: string[]
+  custom_answer: string
+}
+
 export interface ScribeSession {
   id: string
   type: ScribeType
   status: ScribeStatus
   result: SummarizationResult | NoteGenerationResult | null
+  title?: string
+  doctor_answers?: DoctorSuggestionAnswer[]
   created_at: string
 }
 
@@ -44,6 +73,8 @@ export interface NoteGenerationResult {
   plan?: string
   medications?: string[]
   follow_up?: string
+  // Doctor observations (MCQ suggestions)
+  suggestions?: DoctorSuggestion[]
 }
 
 export interface SummarizeRequest {
@@ -53,4 +84,9 @@ export interface SummarizeRequest {
 export interface GenerateNotesRequest {
   text: string
   note_type: NoteType
+}
+
+export interface UpdateSessionRequest {
+  title?: string
+  result?: Partial<NoteGenerationResult>
 }

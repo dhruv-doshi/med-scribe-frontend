@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useScribeHistory } from '@/hooks/useScribe'
+import { useScribeHistory, useDeleteSession } from '@/hooks/useScribe'
 import { ROUTES } from '@/constants/routes'
-import { Activity, Loader2 } from 'lucide-react'
+import { Activity, Loader2, Trash2 } from 'lucide-react'
 
 export default function HistoryList() {
   const { data: sessions, isLoading } = useScribeHistory()
+  const { mutateAsync: deleteSession, isPending: isDeleting } = useDeleteSession()
   const [titles, setTitles] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -19,6 +20,20 @@ export default function HistoryList() {
     }
     setTitles(map)
   }, [sessions])
+
+  const handleDelete = async (e: React.MouseEvent, sessionId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!window.confirm('Delete this session? This cannot be undone.')) return
+    try {
+      console.log('[HistoryList] Deleting session...', { sessionId })
+      await deleteSession(sessionId)
+      console.log('[HistoryList] ✓ Session deleted')
+    } catch (error) {
+      console.error('[HistoryList] ✗ Failed to delete session', error)
+      alert(`Failed to delete session: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
 
   if (isLoading) return (
     <div className="flex justify-center py-12">
@@ -40,7 +55,7 @@ export default function HistoryList() {
     <div className="space-y-3">
       {sessions.map(s => (
         <Link key={s.id} href={ROUTES.SCRIBE_RESULT(s.id)}>
-          <div className="scan-card card-glow flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition-colors">
+          <div className="group scan-card card-glow flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition-colors">
             <div className="flex items-center gap-3">
               <Activity className="h-5 w-5 text-[var(--accent-cyan)]" />
               <div>
@@ -52,15 +67,26 @@ export default function HistoryList() {
                 </p>
               </div>
             </div>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              s.status === 'completed'
-                ? 'bg-[var(--accent-green)]/15 text-[var(--accent-green)]'
-                : s.status === 'failed'
-                  ? 'bg-[var(--destructive)]/15 text-[var(--destructive)]'
-                  : 'bg-amber-500/15 text-amber-500'
-            }`}>
-              {s.status}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                s.status === 'completed'
+                  ? 'bg-[var(--accent-green)]/15 text-[var(--accent-green)]'
+                  : s.status === 'failed'
+                    ? 'bg-[var(--destructive)]/15 text-[var(--destructive)]'
+                    : 'bg-amber-500/15 text-amber-500'
+              }`}>
+                {s.status}
+              </span>
+              <button
+                onClick={e => handleDelete(e, s.id)}
+                disabled={isDeleting}
+                className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-[var(--secondary)] transition-all disabled:opacity-50"
+                aria-label="Delete session"
+                title="Delete"
+              >
+                <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+              </button>
+            </div>
           </div>
         </Link>
       ))}
