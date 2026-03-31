@@ -121,9 +121,7 @@ export default function NoteCard({
           <CardContent>
             {isEditing ? (
               <textarea
-                value={(displayResult.medications || []).map(med =>
-                  typeof med === 'string' ? med : `${med.name} - ${med.dosage} ${med.route}`
-                ).join('\n')}
+                value={(displayResult.medications || []).join('\n')}
                 onChange={e => handleArrayFieldChange('medications', e.target.value)}
                 className="w-full text-sm border border-[var(--input)] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--accent-cyan)] resize-none"
                 rows={3}
@@ -131,14 +129,9 @@ export default function NoteCard({
               />
             ) : (
               <ul className="space-y-1">
-                {(displayResult.medications ?? []).map((med, i) => {
-                  const medText = typeof med === 'string'
-                    ? med
-                    : `${med.name} - ${med.dosage} ${med.route}`
-                  return (
-                    <li key={i} className="text-sm">• {medText}</li>
-                  )
-                })}
+                {(displayResult.medications ?? []).map((med, i) => (
+                  <li key={i} className="text-sm">• {med}</li>
+                ))}
               </ul>
             )}
           </CardContent>
